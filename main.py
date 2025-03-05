@@ -72,17 +72,27 @@ async def wait_for_order_id(trade, timeout=5.0):
         await asyncio.sleep(0.2)
     return 0
 
-# async def wait_for_order_fill(trade, timeout=30.0):
-#     """
-#     Wartet asynchron darauf, dass eine Order gefüllt wird.
-#     Gibt den avgFillPrice zurück, sobald die OrderStatus 'Filled' erreicht.
-#     """
-#     start = time.time()
-#     while time.time() - start < timeout:
-#         if trade.orderStatus.status == "Filled":
-#             return trade.orderStatus.avgFillPrice
-#         await asyncio.sleep(0.5)
-#     return None
+# Add this new function near your other wait_for functions
+async def wait_for_fill_or_cancel(trade, timeout=10.0):
+    """
+    Wartet maximal timeout Sekunden auf die Ausführung einer Order.
+    Storniert die Order, falls sie nicht innerhalb des Timeouts ausgeführt wird.
+    Returns:
+        tuple: (filled, avgFillPrice)
+        - filled: True wenn Order ausgeführt wurde, False wenn storniert
+        - avgFillPrice: Durchschnittlicher Ausführungspreis oder None
+    """
+    start = time.time()
+    while time.time() - start < timeout:
+        if trade.orderStatus.status == "Filled":
+            return True, trade.orderStatus.avgFillPrice
+        await asyncio.sleep(0.1)
+    
+    # Timeout erreicht - Order stornieren
+    print(f"⚠️ Timeout erreicht für Order {trade.order.orderId}, storniere...")
+    ib.cancelOrder(trade.order)
+    return False, None
+
 
 async def wait_for_bracket_fill(parent_trade, tp_trade, ts_trade, timeout=3600.0):
     """
@@ -191,12 +201,17 @@ async def place_bracket_order(order: BracketOrderModel):
     )
     print("Creating parent order:", parent)
     
-    # 4) Parent Order platzieren und auf gültige OrderID warten
+    # 4) Parent Order platzieren und auf Ausführung oder Timeout warten
     parent_trade = ib.placeOrder(contract, parent)
-    parent_id = await wait_for_order_id(parent_trade, timeout=5.0)
-    if parent_id == 0:
-        raise HTTPException(status_code=500, detail="Parent Order hat keine gültige OrderID erhalten.")
-    print("Parent order placed. OrderID:", parent_id)
+    parent_filled, parent_fill_price = await wait_for_fill_or_cancel(parent_trade)
+    
+    if not parent_filled:
+        raise HTTPException(
+            status_code=408, 
+            detail="Parent Order wurde nicht innerhalb von 10 Sekunden ausgeführt."
+        )
+    
+    print(f"✅ Parent order filled at price: {parent_fill_price}")
     
     # 5) Child Order für Take Profit erstellen (Limit Order)
     takeprofit = Order(
@@ -206,7 +221,7 @@ async def place_bracket_order(order: BracketOrderModel):
         lmtPrice=absTakeProfit,
         transmit=False,  # Nicht sofort senden
         outsideRth=True,
-        parentId=parent_id
+        parentId=parent_trade.order.orderId
     )
     print("Created take profit order:", takeprofit)
     
@@ -220,30 +235,50 @@ async def place_bracket_order(order: BracketOrderModel):
         lmtPriceOffset= 4 * tick_size,  # Mindestabstand zum Limit-Preis
         transmit=True,  # Mit dieser Order wird die gesamte Gruppe aktiviert
         outsideRth=True,
-        parentId=parent_id
+
+        parentId=parent_trade.order.orderId
     )
     print("Created trailing stop order:", trailing_stop)
     
-    # 7) Child Orders platzieren
+    # 7) Child Orders platzieren und auf Ausführung warten
     tp_trade = ib.placeOrder(contract, takeprofit)
     ts_trade = ib.placeOrder(contract, trailing_stop)
     print("Placed take profit order:", tp_trade)
     print("Placed trailing stop order:", ts_trade)
     
-    # 8) Warten, bis der Parent gefüllt wird und einer der Child Orders ebenfalls gefüllt wird
-    parentFilled, childType, parentFill, childFill = await wait_for_bracket_fill(parent_trade, tp_trade, ts_trade)
+    # Warte auf die Ausführung einer der Child Orders
+    while True:
+        tp_filled, tp_price = await wait_for_fill_or_cancel(tp_trade, timeout=10.0)
+        ts_filled, ts_price = await wait_for_fill_or_cancel(ts_trade, timeout=10.0)
+        
+        if tp_filled:
+            childType = "takeProfit"
+            childFill = tp_price
+            # Cancel the other child order
+            ib.cancelOrder(ts_trade.order)
+            break
+        elif ts_filled:
+            childType = "trailingStop"
+            childFill = ts_price
+            # Cancel the other child order
+            ib.cancelOrder(tp_trade.order)
+            break
+        
+        # If neither filled within timeout, keep trying
+        # You might want to add a maximum total timeout here
+        await asyncio.sleep(1)
     
-    if not parentFilled or childType is None:
+    if not parent_filled or childType is None:
         raise HTTPException(status_code=500, detail="Order wurde nicht innerhalb des Zeitlimits vollständig gefüllt.")
     
-    print(f"Bracket order filled. ParentFill: {parentFill}, Child '{childType}' Fill: {childFill}")
+    print(f"Bracket order filled. ParentFill: {parent_fill_price}, Child '{childType}' Fill: {childFill}")
     
     # 9) Gewinn/Verlust berechnen
-    if parentFill is not None and childFill is not None:
+    if parent_fill_price is not None and childFill is not None:
         if order.action.upper() == "BUY":
-            profit = childFill - parentFill
+            profit = childFill - parent_fill_price
         else:
-            profit = parentFill - childFill
+            profit = parent_fill_price - childFill
     else:
         profit = 0.0
 
@@ -260,7 +295,7 @@ async def place_bracket_order(order: BracketOrderModel):
         "symbol": order.symbol,
         "side": order.action.upper(),
         "contracts": order.quantity,
-        "parentFillPrice": parentFill,
+        "parentFillPrice": parent_fill_price,
         "childFillPrice": childFill,
         "commision per contract" : 2.25,
         "timeframe (min)": order.timeframe,
@@ -274,8 +309,8 @@ async def place_bracket_order(order: BracketOrderModel):
     
     return {
         "status": "BracketOrder with trailing stop fully filled and logged",
-        "parentOrderId": parent.orderId,
-        "parentFillPrice": parentFill,
+        "parentOrderId": parent_trade.order.orderId,
+        "parentFillPrice": parent_fill_price,
         "childOrderType": childType,
         "childFillPrice": childFill,
         "logEntry": log_entry
