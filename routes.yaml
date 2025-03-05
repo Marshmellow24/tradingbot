@@ -1,0 +1,12 @@
+orderRoutingEnabled: false
+routes:
+  - name: "AlternativeRouting1"
+    algoStrategy: "Adaptive"
+    algoParams:
+      - tag: "adaptivePctLimit"
+        value: "0.5"
+  - name: "AlternativeRouting2"
+    algoStrategy: "CustomRoute"
+    algoParams:
+      - tag: "customParam"
+        value: "1.0"
