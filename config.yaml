@@ -1,0 +1,18 @@
+order_settings:
+  # Feature toggles
+  use_take_profit: False # Enable/disable take profit orders
+  use_trail_stop: True # Enable/disable trailing stop orders
+
+  # Override values (null means use webhook values)
+  overrides:
+    trail_amount: 6 # Override trailAmt if set
+    stop_loss: 15 # Override stopLoss if set
+    take_profit: # Override takeProfit if set
+    quantity: # Override main quantity if set
+    tp_quantity: # Separate quantity for take profit
+    ts_quantity: # Separate quantity for trailing stop
+
+  # Timeouts (in seconds)
+  timeouts:
+    fill_or_cancel: 20.0 # Timeout for wait_for_fill_or_cancel
+    bracket_fill: 3600.0 # Timeout for wait_for_bracket_fill
