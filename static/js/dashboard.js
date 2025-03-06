@@ -159,29 +159,15 @@ async function updateConfig() {
     const orderSettings = config.order_settings || {};
     const orderSettingsHtml = Object.entries(orderSettings)
       .filter(([key]) => !["overrides", "timeouts"].includes(key))
-      .map(
-        ([key, value]) => `
-        <div class="config-item">
-          <span class="config-label">${formatKey(key)}</span>
-          <span class="config-value ${
-            value === true ? "enabled" : value === false ? "disabled" : ""
-          }">${value}</span>
-        </div>
-      `
-      )
+      .map(([key, value]) => createConfigItem(key, value, "order_settings"))
       .join("");
     document.getElementById("orderSettings").innerHTML = orderSettingsHtml;
 
     // Update Timeout Settings
     const timeouts = orderSettings.timeouts || {};
     const timeoutsHtml = Object.entries(timeouts)
-      .map(
-        ([key, value]) => `
-        <div class="config-item">
-          <span class="config-label">${formatKey(key)}</span>
-          <span class="config-value">${value}s</span>
-        </div>
-      `
+      .map(([key, value]) =>
+        createConfigItem(key, value, "order_settings.timeouts")
       )
       .join("");
     document.getElementById("timeoutSettings").innerHTML = timeoutsHtml;
@@ -189,18 +175,88 @@ async function updateConfig() {
     // Update Override Settings
     const overrides = orderSettings.overrides || {};
     const overridesHtml = Object.entries(overrides)
-      .map(
-        ([key, value]) => `
-        <div class="config-item">
-          <span class="config-label">${formatKey(key)}</span>
-          <span class="config-value">${value ?? "Default"}</span>
-        </div>
-      `
+      .map(([key, value]) =>
+        createConfigItem(key, value, "order_settings.overrides")
       )
       .join("");
     document.getElementById("overrideSettings").innerHTML = overridesHtml;
   } catch (error) {
     console.error("Error updating config:", error);
+  }
+}
+
+function createConfigItem(key, value, path) {
+  const isBoolean = typeof value === "boolean";
+  const inputHtml = isBoolean
+    ? createToggleSwitch(value)
+    : createNumberInput(value);
+
+  return `
+        <div class="config-item" data-path="${path}.${key}">
+            <span class="config-label">${formatKey(key)}</span>
+            <div class="config-value">
+                ${inputHtml}
+                <button onclick="saveConfig(this)" title="Save changes">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 1 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function createToggleSwitch(value) {
+  return `
+        <label class="toggle-switch">
+            <input type="checkbox" ${
+              value ? "checked" : ""
+            } onchange="saveConfig(this)">
+            <span class="toggle-slider"></span>
+        </label>
+    `;
+}
+
+function createNumberInput(value) {
+  return `
+        <input type="number" value="${value || ""}" 
+               placeholder="Default" 
+               step="any"
+               onchange="saveConfig(this)">
+    `;
+}
+
+async function saveConfig(element) {
+  const configItem = element.closest(".config-item");
+  const path = configItem.dataset.path;
+  const input = configItem.querySelector("input");
+  const value =
+    input.type === "checkbox"
+      ? input.checked
+      : input.value === ""
+      ? null
+      : !isNaN(input.value)
+      ? parseFloat(input.value)
+      : input.value;
+
+  try {
+    const response = await fetch("/config/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [path]: value }),
+    });
+
+    if (!response.ok) throw new Error("Failed to update config");
+
+    // Show success feedback
+    const button = configItem.querySelector("button");
+    button.style.color = "var(--success-color)";
+    setTimeout(() => (button.style.color = ""), 1000);
+  } catch (error) {
+    console.error("Error saving config:", error);
+    // Show error feedback
+    input.style.borderColor = "var(--danger-color)";
+    setTimeout(() => (input.style.borderColor = ""), 1000);
   }
 }
 

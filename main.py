@@ -340,6 +340,34 @@ async def get_config():
     """Endpoint to fetch current configuration"""
     return {"config": config.config}
 
+@app.post("/config/update")
+async def update_config(updates: dict):
+    """Endpoint to update configuration values"""
+    try:
+        # Get current config
+        current_config = config.config.copy()
+        
+        # Update nested dictionary values
+        def update_nested(d, path, value):
+            keys = path.split('.')
+            current = d
+            for key in keys[:-1]:
+                current = current.setdefault(key, {})
+            current[keys[-1]] = value
+            return d
+        
+        # Apply updates
+        for path, value in updates.items():
+            current_config = update_nested(current_config, path, value)
+        
+        # Write to yaml file
+        with open(config.config_path, 'w') as f:
+            yaml.dump(current_config, f, default_flow_style=False)
+        
+        return {"status": "success", "message": "Configuration updated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/favicon.ico", response_class=Response)
 async def favicon():
     with open("static/favicon.ico", "rb") as f:
