@@ -1,0 +1,351 @@
+:root {
+  --primary-color: #007aff;
+  --success-color: #34c759;
+  --danger-color: #ff3b30;
+  --bg-color: #f5f5f7;
+  --card-bg: #ffffff;
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+  --border-radius: 12px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+h1 {
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--card-bg);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--danger-color);
+  transition: background-color 0.3s ease;
+}
+
+.status-dot.connected {
+  background-color: var(--success-color);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-areas:
+    "stats stats config"
+    "chart chart chart";
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto minmax(300px, 40vh);
+  gap: 1.5rem;
+  max-height: calc(100vh - 100px);
+}
+
+#statsCard {
+  grid-area: stats;
+}
+#configCard {
+  grid-area: config;
+}
+#tradeHistory {
+  grid-area: trades;
+  max-height: 400px;
+  overflow: hidden;
+}
+#profitChart {
+  grid-area: chart;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0; /* Remove min-height constraint */
+  overflow: hidden;
+}
+
+.trade-table-wrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100% - 60px); /* Account for header */
+  margin-right: -1.5rem;
+  margin-left: -1.5rem;
+  padding: 0 1.5rem;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px -1px rgba(0, 0, 0, 0.1),
+    0 4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+.card h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 1rem;
+  background: var(--bg-color);
+  border-radius: var(--border-radius);
+  transition: transform 0.2s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+}
+
+.stat-label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1rem;
+}
+
+th,
+td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+th {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+td {
+  color: var(--text-primary);
+}
+
+.profit {
+  color: var(--success-color);
+  font-weight: 500;
+}
+
+.loss {
+  color: var(--danger-color);
+  font-weight: 500;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.config-section {
+  background: var(--bg-color);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+}
+
+.config-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.config-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.config-item:last-child {
+  border-bottom: none;
+}
+
+.config-label {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.config-value {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.config-value.enabled {
+  color: var(--success-color);
+}
+
+.config-value.disabled {
+  color: var(--danger-color);
+}
+
+/* Chart Customization */
+#profitCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important; /* Override Chart.js sizing */
+  height: 100% !important;
+  padding: 1rem;
+}
+
+.recent-trades {
+  margin-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding-top: 1rem;
+}
+
+.recent-trades h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.trades-wrapper {
+  max-height: 250px;
+  overflow-y: auto;
+  border-radius: var(--border-radius);
+  background: var(--bg-color);
+  padding: 0.5rem;
+}
+
+.trades-table {
+  width: 100%;
+  font-size: 0.813rem;
+  border-collapse: collapse;
+}
+
+.trades-table th {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: left;
+  padding: 0.5rem;
+  position: sticky;
+  top: 0;
+  background: var(--bg-color);
+  z-index: 1;
+}
+
+.trades-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.trades-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Style scrollbar for WebKit browsers */
+.trades-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.trades-wrapper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.trades-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-areas:
+      "stats stats"
+      "config config"
+      "chart chart";
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto auto minmax(250px, 35vh);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .dashboard-grid {
+    grid-template-areas:
+      "stats"
+      "config"
+      "chart";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(200px, 30vh);
+    height: auto;
+  }
+
+  #tradeHistory {
+    max-height: 300px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
