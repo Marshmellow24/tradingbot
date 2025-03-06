@@ -5,11 +5,11 @@ order_settings:
 
   # Override values (null means use webhook values)
   overrides:
-    trail_amount: 6 # Override trailAmt if set
+    trail_amount: 4 # Override trailAmt if set
     stop_loss: 15 # Override stopLoss if set
-    take_profit: # Override takeProfit if set
+    take_profit: 30 # Override takeProfit if set
     quantity: # Override main quantity if set
-    tp_quantity: # Separate quantity for take profit
+    tp_quantity: 1 # Separate quantity for take profit
     ts_quantity: # Separate quantity for trailing stop
 
   # Timeouts (in seconds)

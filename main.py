@@ -3,8 +3,10 @@
 import asyncio
 import time
 import yaml
-from datetime import datetime, timedelta
-from fastapi import FastAPI, HTTPException, Response
+from datetime import datetime
+from fastapi import FastAPI, HTTPException, Response, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from ib_insync import *
@@ -60,6 +62,9 @@ async def lifespan(app: FastAPI):
     ib.disconnect()
 
 app = FastAPI(lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
 
 #
 # Pydantic-Datenmodell für die Bracket-Order
@@ -284,8 +289,8 @@ async def place_bracket_order(order: BracketOrderModel):
         "contracts": order.quantity,
         "parentFillPrice": parentFill,
         "childFillPrice": childFill,
-        "commision per contract" : 2.25,
-        "timeframe (min)": order.timeframe,
+        "commision_per_contract" : 2.25,
+        "timeframe": order.timeframe,
         "hitType": childType,        # "takeProfit" oder "trailingStop"
         "profit": (round(profit, 2) * order.quantity * 20) - (2.25 * order.quantity * 2),   # auf 2 Nachkommastellen gerundet
         "result": result_flag         # "Profit", "Loss" oder "Neutral"
@@ -323,10 +328,30 @@ async def connection_status():
 async def pending_orders():
     return {"orders": ib.pendingTickers()}
 
+@app.get("/")
+async def pending_orders(request: Request):
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {"request": request}
+    )
+
+@app.get("/config")
+async def get_config():
+    """Endpoint to fetch current configuration"""
+    return {"config": config.config}
+
 @app.get("/favicon.ico", response_class=Response)
 async def favicon():
     with open("static/favicon.ico", "rb") as f:
         return Response(content=f.read(), media_type="image/x-icon")
-    
+
+# Add this route for the dashboard
+@app.get("/dashboard")
+async def dashboard(request: Request):
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {"request": request}
+    )
+
 if __name__ == '__main__':
     uvicorn.run(app, host="127.0.0.1", port=8000, lifespan="on")
