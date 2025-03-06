@@ -1,3 +1,53 @@
+function initTheme() {
+  const themeToggle = document.getElementById("themeToggle");
+  const savedTheme = localStorage.getItem("theme") || "light";
+
+  // Set initial theme
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  themeToggle.checked = savedTheme === "dark";
+
+  // Update chart colors if it exists
+  if (profitChart) {
+    updateChartTheme(savedTheme);
+  }
+
+  // Add event listener
+  themeToggle.addEventListener("change", (e) => {
+    const theme = e.target.checked ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+    updateChartTheme(theme);
+  });
+}
+
+function updateChartTheme(theme) {
+  const isDark = theme === "dark";
+
+  if (profitChart) {
+    profitChart.options.scales.y.grid.color = isDark
+      ? "rgba(255,255,255,0.05)"
+      : "rgba(0,0,0,0.05)";
+    profitChart.options.scales.y.ticks.color = isDark ? "#98989D" : "#86868B";
+    profitChart.options.scales.x.ticks.color = isDark ? "#98989D" : "#86868B";
+
+    // Update tooltips
+    profitChart.options.plugins.tooltip.backgroundColor = isDark
+      ? "rgba(44, 44, 46, 0.9)"
+      : "rgba(255, 255, 255, 0.9)";
+    profitChart.options.plugins.tooltip.titleColor = isDark
+      ? "#FFFFFF"
+      : "#1D1D1F";
+    profitChart.options.plugins.tooltip.bodyColor = isDark
+      ? "#FFFFFF"
+      : "#1D1D1F";
+    profitChart.options.plugins.tooltip.borderColor = isDark
+      ? "#3C3C3E"
+      : "#E5E5E5";
+
+    profitChart.update();
+  }
+}
+
 let profitChart;
 
 async function updateDashboard() {
@@ -78,6 +128,7 @@ function updateTradeTable(trades) {
 }
 function updateProfitChart(trades) {
   const ctx = document.getElementById("profitCanvas");
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
 
   if (!profitChart) {
     profitChart = new Chart(ctx, {
@@ -107,10 +158,12 @@ function updateProfitChart(trades) {
             position: "top",
           },
           tooltip: {
-            backgroundColor: "rgba(255, 255, 255, 0.9)",
-            titleColor: "#1D1D1F",
-            bodyColor: "#1D1D1F",
-            borderColor: "#E5E5E5",
+            backgroundColor: isDark
+              ? "rgba(44, 44, 46, 0.9)"
+              : "rgba(255, 255, 255, 0.9)",
+            titleColor: isDark ? "#FFFFFF" : "#1D1D1F",
+            bodyColor: isDark ? "#FFFFFF" : "#1D1D1F",
+            borderColor: isDark ? "#3C3C3E" : "#E5E5E5",
             borderWidth: 1,
             padding: 10,
             displayColors: false,
@@ -123,12 +176,18 @@ function updateProfitChart(trades) {
           y: {
             beginAtZero: true,
             grid: {
-              color: "rgba(0, 0, 0, 0.05)",
+              color: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+            },
+            ticks: {
+              color: isDark ? "#98989D" : "#86868B",
             },
           },
           x: {
             grid: {
               display: false,
+            },
+            ticks: {
+              color: isDark ? "#98989D" : "#86868B",
             },
           },
         },
@@ -270,3 +329,6 @@ function formatKey(key) {
 // Update dashboard every 5 seconds
 setInterval(updateDashboard, 5000);
 updateDashboard();
+
+// Call initTheme when the document loads
+document.addEventListener("DOMContentLoaded", initTheme);

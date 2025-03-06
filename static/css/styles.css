@@ -9,6 +9,20 @@
   --border-radius: 12px;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --chart-grid: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] {
+  --primary-color: #0a84ff;
+  --success-color: #32d74b;
+  --danger-color: #ff453a;
+  --bg-color: #1c1c1e;
+  --card-bg: #2c2c2e;
+  --text-primary: #ffffff;
+  --text-secondary: #98989d;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --chart-grid: rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -423,4 +437,23 @@ input:checked + .toggle-slider:before {
   .stats-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.theme-switch {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.theme-switch label {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.theme-switch .toggle-switch {
+  margin: 0;
 }
