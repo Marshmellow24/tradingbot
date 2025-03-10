@@ -4,7 +4,7 @@ order_settings:
     stop_loss: 40
     take_profit: 100
     tp_quantity: 1
-    trail_amount: 7
+    trail_amount: 5
     ts_quantity: 2
   timeouts:
     bracket_fill: 3600

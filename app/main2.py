@@ -1,16 +1,10 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-import uvicorn
+from fastapi.staticfiles import StaticFiles
 
-from app.core.connection import IBConnection
-from app.core.config import ConfigWatcher
-from app.api.router import router
-from app.services.trade_logger import TradeLogger
-
-# Global instances
-ib_connection = IBConnection()
-config = ConfigWatcher()
-trade_logger = TradeLogger()
+# Import dependencies
+from .core.dependencies import ib_connection, config, trade_logger, templates
+from .api.router import router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,7 +15,5 @@ async def lifespan(app: FastAPI):
     await ib_connection.disconnect()
 
 app = FastAPI(lifespan=lifespan)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(router)
-
-if __name__ == '__main__':
-    uvicorn.run(app, host="127.0.0.1", port=8000)

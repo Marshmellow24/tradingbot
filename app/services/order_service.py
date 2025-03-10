@@ -1,14 +1,33 @@
 from fastapi import HTTPException
 from ib_insync import *
 from ..utils.helpers import wait_for_order_id, wait_for_fill_or_cancel, wait_for_bracket_fill
-from ..core import config
+from ..core.dependencies import config, trade_logger
+from ..api.models import BracketOrderModel
+import yaml
+
+# --- YAML-Konfiguration laden (optional) ---
+config = {}
+try:
+    with open('config.yaml', 'r') as f:
+        config = yaml.safe_load(f)
+except Exception as e:
+    print("❌ Keine YAML-Konfiguration gefunden, Standardwerte werden verwendet.")
+    config = {}
+
+
 
 class OrderService:
     def __init__(self, ib_connection):
-        self.ib = ib_connection.ib
+        """Initialize with IB connection instance"""
+        # Store the full connection object, not just the IB client
+        self.ib_connection = ib_connection
+        self.trade_logger = trade_logger.TradeLogger()
         
-    @app.post("/webhook")
-    async def place_bracket_order(order: BracketOrderModel):
+
+    async def place_bracket_order(self, order: BracketOrderModel):
+        # Get IB instance from connection
+        ib = self.ib_connection.ib
+
         # Load settings from YAML
         settings = config.get('order_settings', {})
         overrides = settings.get('overrides', {})
@@ -33,7 +52,9 @@ class OrderService:
             contract = Future(symbol="NQ", lastTradeDateOrContractMonth="202503", exchange="CME", currency="USD")
         else:
             contract = Future(symbol=order.symbol, lastTradeDateOrContractMonth="202503", exchange="CME", currency="USD")
-        self.ib.qualifyContracts(contract)
+        
+        # Use ib instance
+        ib.qualifyContracts(contract)
         print("✅ Contract qualified:", contract)
         
         # 2) Berechne die absoluten Zielpreise aus den relativen Werten.
@@ -141,7 +162,12 @@ class OrderService:
             result_flag = "Neutral"
 
         # 10) Log-Eintrag erstellen – nur die wichtigsten Daten
-     
+        log_entry = self.trade_logger.log_trade(
+            order=order,
+            parent_fill=parentFill,
+            child_fill=childFill,
+            child_type=childType
+        )
         
         return {
             "status": "BracketOrder with trailing stop fully filled and logged",

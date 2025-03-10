@@ -86,3 +86,43 @@ class ConfigWatcher:
             new_value = get_nested(new_config, path)
             if old_value != new_value:
                 print(f"📝 Config change: {path}: {old_value} -> {new_value}")
+
+    async def update(self, updates: dict) -> None:
+        """
+        Update config file with new values.
+        
+        Args:
+            updates: Dictionary of dot-notation paths and their new values
+                    e.g. {'order_settings.overrides.quantity': 2}
+        """
+        try:
+            # Read current config
+            if os.path.exists(self.config_path):
+                with open(self.config_path, 'r') as f:
+                    current_config = yaml.safe_load(f) or {}
+            else:
+                current_config = {}
+
+            # Apply updates
+            for path, value in updates.items():
+                self._update_nested_dict(current_config, path.split('.'), value)
+
+            # Write updated config
+            with open(self.config_path, 'w') as f:
+                yaml.dump(current_config, f, default_flow_style=False)
+
+            # Update internal state
+            self.config = current_config
+            self.last_modified = os.path.getmtime(self.config_path)
+            
+            print(f"✅ Config updated successfully at {datetime.now().strftime('%H:%M:%S')}")
+            
+        except Exception as e:
+            print(f"❌ Error updating config: {e}")
+            raise
+
+    def _update_nested_dict(self, d: dict, keys: list, value: any) -> None:
+        """Helper method to update nested dictionary using a list of keys"""
+        for key in keys[:-1]:
+            d = d.setdefault(key, {})
+        d[keys[-1]] = value
