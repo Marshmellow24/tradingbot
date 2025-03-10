@@ -1,13 +1,13 @@
 order_settings:
   overrides:
-    quantity: null
+    quantity: 2
     stop_loss: 40
-    take_profit: null
-    tp_quantity: null
+    take_profit: 100
+    tp_quantity: 1
     trail_amount: 7
-    ts_quantity: null
+    ts_quantity: 2
   timeouts:
     bracket_fill: 3600
     fill_or_cancel: 20
-  use_take_profit: false
+  use_take_profit: true
   use_trail_stop: true

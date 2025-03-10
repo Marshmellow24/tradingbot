@@ -120,6 +120,7 @@ function updateTradeTable(trades) {
               2
             )} → ${trade.childFillPrice.toFixed(2)}</td>
             <td>${trade.timeframe}</td>
+            <td>${trade.hitType}</td>
             <td class="${trade.profit >= 0 ? "profit" : "loss"}">
                 ${trade.profit >= 0 ? "+" : ""}$${trade.profit.toFixed(2)}
             </td>
@@ -332,3 +333,35 @@ updateDashboard();
 
 // Call initTheme when the document loads
 document.addEventListener("DOMContentLoaded", initTheme);
+
+document.getElementById("downloadLogs").addEventListener("click", async () => {
+  try {
+    // Fetch the trade logs
+    const response = await fetch("/trade_logs");
+    const data = await response.json();
+
+    // Convert to pretty-printed JSON
+    const jsonString = JSON.stringify(data.trade_logs, null, 2);
+
+    // Create blob and download link
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    // Set filename with current date
+    const date = new Date().toISOString().split("T")[0];
+    a.download = `trade_logs_${date}.json`;
+    a.href = url;
+
+    // Trigger download
+    document.body.appendChild(a);
+    a.click();
+
+    // Cleanup
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error("Error downloading logs:", error);
+    alert("Failed to download logs. Please try again.");
+  }
+});

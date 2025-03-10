@@ -20,7 +20,16 @@
     </div>
     <div class="container">
       <header>
-        <h1>Trading Bot Dashboard</h1>
+        <div class="header-content">
+          <h1>Trading Bot Dashboard</h1>
+          <button id="downloadLogs" class="download-button">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 12L3 7h10l-5 5z" fill="currentColor" />
+              <path d="M3 13h10v1H3z" fill="currentColor" />
+            </svg>
+            Download Logs
+          </button>
+        </div>
         <div class="status-indicator" id="connectionStatus">
           <span class="status-dot"></span>
           <span class="status-text">Connecting...</span>
@@ -55,6 +64,7 @@
                     <th>Symbol</th>
                     <th>Entry/Exit</th>
                     <th>Timeframe</th>
+                    <th>Hit Type</th>
                     <th>P/L</th>
                   </tr>
                 </thead>
