@@ -1,3 +1,4 @@
+import os
 from ib_insync import IB, util
 import asyncio
 
@@ -8,7 +9,15 @@ class IBConnection:
 
     async def connect(self):
         util.patchAsyncio()
-        await self.ib.connectAsync(host='127.0.0.1', port=7497, clientId=1)
+        host = os.getenv('IB_HOST', '127.0.0.1')
+        port = int(os.getenv('IB_PORT', '7497'))
+        client_id = int(os.getenv('IB_CLIENT_ID', '1'))
+        
+        await self.ib.connectAsync(
+            host=host, 
+            port=port, 
+            clientId=client_id
+        )
         self._keep_alive_task = asyncio.create_task(self._keep_alive())
 
     async def disconnect(self):

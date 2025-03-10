@@ -21,7 +21,7 @@ class OrderService:
         """Initialize with IB connection instance"""
         # Store the full connection object, not just the IB client
         self.ib_connection = ib_connection
-        self.trade_logger = trade_logger.TradeLogger()
+        self.trade_logger = trade_logger
         
 
     async def place_bracket_order(self, order: BracketOrderModel):
@@ -130,6 +130,7 @@ class OrderService:
         parent_filled, parent_fill_price = await wait_for_fill_or_cancel(parent_trade, timeout=fill_timeout)
         
         if not parent_filled:
+            ib.cancelOrder(parent_trade.order)
             raise HTTPException(
                 status_code=408,
                 detail=f"❌ Parent Order wurde nicht innerhalb von {fill_timeout} Sekunden ausgeführt."
