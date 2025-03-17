@@ -133,19 +133,6 @@ async function updateDashboard() {
   }
 }
 
-// function updateConnectionStatus(connected) {
-//   const statusDot = document.querySelector(".status-dot");
-//   const statusText = document.querySelector(".status-text");
-
-//   if (connected) {
-//     statusDot.classList.add("connected");
-//     statusText.textContent = "Connected";
-//   } else {
-//     statusDot.classList.remove("connected");
-//     statusText.textContent = "Disconnected";
-//   }
-// }
-
 function updateStats(trades) {
   const totalTrades = trades.length;
   const profitableTrades = trades.filter((t) => t.result === "Profit").length;
