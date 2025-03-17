@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+
 
 class TradeLogger:
     def __init__(self):
@@ -11,8 +11,10 @@ class TradeLogger:
         parent_fill: float,
         child_fill: float,
         child_type: str,
+        actualquantity: int,
         commission_per_contract: float = 2.25,
-        tick_value: float = 20.0
+        tick_value: float = 20.0,
+        
     ) -> dict:
         """
         Log a completed trade with all necessary information.
@@ -27,8 +29,8 @@ class TradeLogger:
         """
         # Calculate profit/loss
         profit = (child_fill - parent_fill) if order.action.upper() == "BUY" else (parent_fill - child_fill)
-        total_commission = commission_per_contract * order.quantity * 2  # Entry and exit
-        total_profit = (round(profit, 2) * order.quantity * tick_value) - total_commission
+        total_commission = commission_per_contract * actualquantity * 2  # Entry and exit
+        total_profit = (round(profit, 2) * actualquantity * tick_value) - total_commission
         
         # Determine result
         result_flag = (
@@ -41,7 +43,7 @@ class TradeLogger:
             "timestamp": datetime.now().isoformat(),
             "symbol": order.symbol,
             "side": order.action.upper(),
-            "contracts": order.quantity,
+            "contracts": actualquantity,
             "parentFillPrice": parent_fill,
             "childFillPrice": child_fill,
             "commission_per_contract": commission_per_contract,

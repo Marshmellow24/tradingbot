@@ -1,13 +1,16 @@
 order_settings:
   overrides:
-    quantity: 1
+    quantity: 2
     stop_loss: 40
     take_profit: 100
     tp_quantity: 1
     trail_amount: 5
-    ts_quantity: 1
+    ts_quantity: 2
   timeouts:
     bracket_fill: 3600
     fill_or_cancel: 40
   use_take_profit: true
   use_trail_stop: true
+logging:
+  level: ERROR # DEBUG, INFO, WARNING, ERROR, or CRITICAL
+  enabled: false

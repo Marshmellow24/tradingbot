@@ -6,7 +6,7 @@ from google.cloud import storage
 
 # Replace the static config loading with a Config class
 class ConfigWatcher:
-    def __init__(self, config_path='config.yaml', reload_interval=5):
+    def __init__(self, config_path='config.yaml', reload_interval=500):
         self.config_path = config_path
         self.reload_interval = reload_interval
         self.last_modified = None

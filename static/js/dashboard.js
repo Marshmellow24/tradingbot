@@ -49,40 +49,102 @@ function updateChartTheme(theme) {
 }
 
 let profitChart;
+let updateInProgress = false;
 
-async function updateDashboard() {
+// Separate update functions for different components
+async function updateConnectionStatus() {
   try {
-    // Update connection status
-    const connStatus = await fetch("/connection_status");
-    const connData = await connStatus.json();
-    updateConnectionStatus(connData.connected);
-
-    // Update trade logs
-    const response = await fetch("/trade_logs");
+    const response = await fetch("/connection_status");
+    if (!response.ok) throw new Error("Connection status fetch failed");
     const data = await response.json();
-    updateStats(data.trade_logs);
-    updateTradeTable(data.trade_logs);
-    updateProfitChart(data.trade_logs);
 
-    // Update config
-    await updateConfig();
+    // Add debug logging
+    console.log("Connection status:", data);
+
+    const statusDot = document.querySelector(".status-dot");
+    const statusText = document.querySelector(".status-text");
+
+    if (!statusDot || !statusText) {
+      console.error("Status elements not found in DOM");
+      return;
+    }
+
+    statusDot.classList.toggle("connected", data.connected);
+    statusText.textContent = data.connected ? "Connected" : "Disconnected";
+  } catch (error) {
+    console.error("Connection status error:", error);
+  }
+}
+
+// Remove updateTradeAndConfig function and rename updateConfig to updateDashboard
+async function updateDashboard() {
+  if (updateInProgress) return;
+
+  try {
+    updateInProgress = true;
+
+    // Fetch both trade logs and config data in parallel
+    const [logsResponse, configResponse] = await Promise.all([
+      fetch("/trade_logs"),
+      fetch("/config"),
+    ]);
+
+    const logsData = await logsResponse.json();
+    const configData = await configResponse.json();
+
+    // Update trade-related components
+    updateStats(logsData.trade_logs);
+    updateTradeTable(logsData.trade_logs);
+    updateProfitChart(logsData.trade_logs);
+
+    // Update config display
+    const config = configData.config;
+    const orderSettings = config.order_settings || {};
+
+    // Update Order Settings
+    document.getElementById("orderSettings").innerHTML = Object.entries(
+      orderSettings
+    )
+      .filter(([key]) => !["overrides", "timeouts"].includes(key))
+      .map(([key, value]) => createConfigItem(key, value, "order_settings"))
+      .join("");
+
+    // Update Timeout Settings
+    document.getElementById("timeoutSettings").innerHTML = Object.entries(
+      orderSettings.timeouts || {}
+    )
+      .map(([key, value]) =>
+        createConfigItem(key, value, "order_settings.timeouts")
+      )
+      .join("");
+
+    // Update Override Settings
+    document.getElementById("overrideSettings").innerHTML = Object.entries(
+      orderSettings.overrides || {}
+    )
+      .map(([key, value]) =>
+        createConfigItem(key, value, "order_settings.overrides")
+      )
+      .join("");
   } catch (error) {
     console.error("Error updating dashboard:", error);
+  } finally {
+    updateInProgress = false;
   }
 }
 
-function updateConnectionStatus(connected) {
-  const statusDot = document.querySelector(".status-dot");
-  const statusText = document.querySelector(".status-text");
+// function updateConnectionStatus(connected) {
+//   const statusDot = document.querySelector(".status-dot");
+//   const statusText = document.querySelector(".status-text");
 
-  if (connected) {
-    statusDot.classList.add("connected");
-    statusText.textContent = "Connected";
-  } else {
-    statusDot.classList.remove("connected");
-    statusText.textContent = "Disconnected";
-  }
-}
+//   if (connected) {
+//     statusDot.classList.add("connected");
+//     statusText.textContent = "Connected";
+//   } else {
+//     statusDot.classList.remove("connected");
+//     statusText.textContent = "Disconnected";
+//   }
+// }
 
 function updateStats(trades) {
   const totalTrades = trades.length;
@@ -104,9 +166,12 @@ function updateTradeTable(trades) {
   tbody.innerHTML = "";
 
   trades
-    .slice(-6)
+    .slice(-8)
     .reverse()
     .forEach((trade) => {
+      // Add debug logging
+      console.log("Trade data:", trade);
+
       const row = tbody.insertRow();
       const time = new Date(trade.timestamp).toLocaleTimeString([], {
         hour: "2-digit",
@@ -121,12 +186,15 @@ function updateTradeTable(trades) {
             )} → ${trade.childFillPrice.toFixed(2)}</td>
             <td>${trade.timeframe}</td>
             <td>${trade.hitType}</td>
+            <td>${trade.side || "N/A"}</td>
+            <td>${trade.contracts || 0}</td>
             <td class="${trade.profit >= 0 ? "profit" : "loss"}">
                 ${trade.profit >= 0 ? "+" : ""}$${trade.profit.toFixed(2)}
             </td>
         `;
     });
 }
+
 function updateProfitChart(trades) {
   const ctx = document.getElementById("profitCanvas");
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
@@ -207,42 +275,6 @@ function updateProfitChart(trades) {
   profitChart.data.labels = labels;
   profitChart.data.datasets[0].data = data;
   profitChart.update();
-}
-
-async function updateConfig() {
-  try {
-    const response = await fetch("/config");
-    const data = await response.json();
-    const config = data.config;
-
-    // Update Order Settings
-    const orderSettings = config.order_settings || {};
-    const orderSettingsHtml = Object.entries(orderSettings)
-      .filter(([key]) => !["overrides", "timeouts"].includes(key))
-      .map(([key, value]) => createConfigItem(key, value, "order_settings"))
-      .join("");
-    document.getElementById("orderSettings").innerHTML = orderSettingsHtml;
-
-    // Update Timeout Settings
-    const timeouts = orderSettings.timeouts || {};
-    const timeoutsHtml = Object.entries(timeouts)
-      .map(([key, value]) =>
-        createConfigItem(key, value, "order_settings.timeouts")
-      )
-      .join("");
-    document.getElementById("timeoutSettings").innerHTML = timeoutsHtml;
-
-    // Update Override Settings
-    const overrides = orderSettings.overrides || {};
-    const overridesHtml = Object.entries(overrides)
-      .map(([key, value]) =>
-        createConfigItem(key, value, "order_settings.overrides")
-      )
-      .join("");
-    document.getElementById("overrideSettings").innerHTML = overridesHtml;
-  } catch (error) {
-    console.error("Error updating config:", error);
-  }
 }
 
 function createConfigItem(key, value, path) {
@@ -327,12 +359,19 @@ function formatKey(key) {
     .join(" ");
 }
 
-// Update dashboard every 5 seconds
-setInterval(updateDashboard, 5000);
-updateDashboard();
-
 // Call initTheme when the document loads
-document.addEventListener("DOMContentLoaded", initTheme);
+document.addEventListener("DOMContentLoaded", () => {
+  // Initialize theme
+  initTheme();
+
+  // Initial loads
+  updateConnectionStatus();
+  updateDashboard();
+
+  // Set up different refresh intervals
+  setInterval(updateConnectionStatus, 3000); // Connection status every 3 seconds
+  setInterval(updateDashboard, 30000); // Full dashboard update every 30 seconds
+});
 
 document.getElementById("downloadLogs").addEventListener("click", async () => {
   try {
