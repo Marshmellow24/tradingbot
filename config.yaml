@@ -11,6 +11,3 @@ order_settings:
     fill_or_cancel: 40
   use_take_profit: true
   use_trail_stop: true
-logging:
-  level: ERROR # DEBUG, INFO, WARNING, ERROR, or CRITICAL
-  enabled: false

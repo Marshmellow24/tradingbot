@@ -356,7 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateDashboard();
 
   // Set up different refresh intervals
-  setInterval(updateConnectionStatus, 3000); // Connection status every 3 seconds
+  setInterval(updateConnectionStatus, 5000); // Connection status every 3 seconds
   setInterval(updateDashboard, 30000); // Full dashboard update every 30 seconds
 });
 

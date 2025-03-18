@@ -2,17 +2,16 @@ import asyncio
 import yaml
 import os
 from datetime import datetime
-from google.cloud import storage
+
 
 # Replace the static config loading with a Config class
 class ConfigWatcher:
-    def __init__(self, config_path='config.yaml', reload_interval=500):
+    def __init__(self, config_path='config.yaml', reload_interval=3):
         self.config_path = config_path
         self.reload_interval = reload_interval
         self.last_modified = None
         self.config = {}
         self._watch_task = None
-        self.bucket_name = os.getenv('GCP_BUCKET_NAME')
 
     async def start_watching(self):
         """Start the config file watching task"""
@@ -30,27 +29,16 @@ class ConfigWatcher:
         return self.config.get(key, default)
 
     async def _watch_config(self):
-        """Watch config file from either local or GCP bucket"""
+        """Watch config file locally"""
         while True:
             try:
-                if os.getenv('GAE_ENV', '').startswith('standard'):
-                    # Read from GCP bucket
-                    storage_client = storage.Client()
-                    bucket = storage_client.bucket(self.bucket_name)
-                    blob = bucket.blob(self.config_path)
-                    
-                    content = blob.download_as_string()
-                    new_config = yaml.safe_load(content)
-                else:
-                    # Local file reading
-                    if os.path.exists(self.config_path):
-                        mtime = os.path.getmtime(self.config_path)
-                        
-                        # Check if file was modified
-                        if self.last_modified != mtime:
-                            with open(self.config_path, 'r') as f:
-                                new_config = yaml.safe_load(f)
-                                
+                if os.path.exists(self.config_path):
+                    mtime = os.path.getmtime(self.config_path)
+                    # print(f"🔄 Currently watching {self.config_path} for changes")
+                    if self.last_modified != mtime:
+                        with open(self.config_path, 'r') as f:
+                            new_config = yaml.safe_load(f)
+                            
                             if new_config != self.config:
                                 old_config = self.config.copy()
                                 self.config = new_config
@@ -58,14 +46,10 @@ class ConfigWatcher:
                                 print(f"🔄 Config reloaded at {datetime.now().strftime('%H:%M:%S')}")
                                 # Log significant changes
                                 self._log_config_changes(old_config, new_config)
-                    else:
-                        print(f"⚠️ Config file {self.config_path} not found, using defaults")
-                        self.config = {}
-                
+                            
             except Exception as e:
                 print(f"❌ Error reading config: {e}")
-                self.config = {}
-                
+                self.config = {}                
             await asyncio.sleep(self.reload_interval)
 
     def _log_config_changes(self, old_config, new_config):

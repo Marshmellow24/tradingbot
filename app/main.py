@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Response
 from contextlib import asynccontextmanager
 from fastapi.staticfiles import StaticFiles
-import os
 
 # Import dependencies
 from .core.dependencies import ib_connection, config, trade_logger, templates
@@ -9,9 +8,6 @@ from .api.router import router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if os.getenv('GAE_ENV', '').startswith('standard'):
-        # Running on App Engine, different startup procedure
-        print("🌐 Starting on Google App Engine")
     
     await ib_connection.connect()
     await config.start_watching()
