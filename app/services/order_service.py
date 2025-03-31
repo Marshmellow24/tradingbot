@@ -52,9 +52,9 @@ class OrderService:
         # 1) Vertrag erstellen und qualifizieren (hier z. B. als US-Aktie)
         
         if order.symbol == "NQ1!":
-            contract = Future(symbol="NQ", lastTradeDateOrContractMonth="202503", exchange="CME", currency="USD")
+            contract = Future(symbol="NQ", lastTradeDateOrContractMonth="202506", exchange="CME", currency="USD")
         else:
-            contract = Future(symbol=order.symbol, lastTradeDateOrContractMonth="202503", exchange="CME", currency="USD")
+            contract = Future(symbol=order.symbol, lastTradeDateOrContractMonth="202506", exchange="CME", currency="USD")
         
         # Use ib instance
         ib.qualifyContracts(contract)
