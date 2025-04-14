@@ -86,36 +86,42 @@ class IBConnection:
             formatted_positions = []
             
             for position in positions:
-                # Create basic position info without market price first
+                contract = position.contract
+                
+                # Qualify the contract first
+                try:
+                    self.ib.qualifyContracts(contract)
+                except Exception as e:
+                    print(f"Error qualifying contract {contract.symbol}: {e}")
+                    continue
+                    
+                # Create basic position info
                 pos_info = {
-                    "symbol": position.contract.symbol,
-                    "secType": position.contract.secType,
-                    "exchange": position.contract.exchange,
-                    "currency": position.contract.currency,
-                    "position": position.position,  # Number of contracts
-                    "avgCost": float(position.avgCost) if hasattr(position, 'avgCost') else 0.0
+                    "symbol": contract.symbol,
+                    "secType": contract.secType,
+                    "exchange": contract.exchange,
+                    "currency": contract.currency,
+                    "position": self._safe_float(position.position),
+                    "avgCost": self._safe_float(position.avgCost)
                 }
                 
-                # Try to get market data for the position
+                # Try to get market data
                 try:
-                    ticker = self.ib.reqMktData(position.contract)
-                    await asyncio.sleep(1)  # Wait for market data to arrive
+                    # Request market data with a qualified contract
+                    ticker = self.ib.reqMktData(contract)
+                    await asyncio.sleep(0.1)  # Brief delay for data to arrive
                     
-                    # Add market-related data if available
+                    # Add market-related data
                     pos_info.update({
-                        "marketPrice": float(ticker.marketPrice()) if ticker.marketPrice() else 0.0,
-                        "marketValue": float(ticker.marketValue()) if hasattr(ticker, 'marketValue') else 0.0,
-                        "unrealizedPNL": float(ticker.unrealizedPNL) if hasattr(ticker, 'unrealizedPNL') else 0.0,
-                        "realizedPNL": float(ticker.realizedPNL) if hasattr(ticker, 'realizedPNL') else 0.0
+                        "marketPrice": self._safe_float(ticker.last if ticker.last else ticker.close),
+                        "marketValue": self._safe_float(pos_info["position"] * pos_info["marketPrice"]),
+                        "unrealizedPNL": self._safe_float((pos_info["marketPrice"] - pos_info["avgCost"]) * pos_info["position"]),
+                        "realizedPNL": 0.0  # Initialize to 0 since we can't get this directly
                     })
                     
-                    # Calculate PNL if market price is available
-                    if pos_info["marketPrice"] > 0:
-                        pos_info["unrealizedPNL"] = (pos_info["marketPrice"] - pos_info["avgCost"]) * pos_info["position"]
-                    
                 except Exception as e:
-                    print(f"Error getting market data for {position.contract.symbol}: {e}")
-                    # Add default values if market data request fails
+                    print(f"Error getting market data for {contract.symbol}: {e}")
+                    # Add default values
                     pos_info.update({
                         "marketPrice": 0.0,
                         "marketValue": 0.0,
@@ -124,12 +130,31 @@ class IBConnection:
                     })
                 
                 formatted_positions.append(pos_info)
+                
+                # Cancel market data subscription to avoid memory leaks
+                try:
+                    self.ib.cancelMktData(contract)
+                except:
+                    pass
             
             return formatted_positions
             
         except Exception as e:
             print(f"Error fetching open positions: {e}")
             return []
+
+    def _safe_float(self, value):
+        """Safely convert value to float, handling None and infinity"""
+        try:
+            if value is None:
+                return 0.0
+            float_val = float(value)
+            # Handle infinity and NaN
+            if not float_val or float_val == float('inf') or float_val == float('-inf') or float_val != float_val:  # last check is for NaN
+                return 0.0
+            return round(float_val, 2)  # Round to 2 decimal places
+        except (TypeError, ValueError):
+            return 0.0
 
     async def _keep_alive(self):
         while True:
