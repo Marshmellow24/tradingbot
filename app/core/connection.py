@@ -88,13 +88,6 @@ class IBConnection:
             for position in positions:
                 contract = position.contract
                 
-                # Qualify the contract first
-                try:
-                    self.ib.qualifyContracts(contract)
-                except Exception as e:
-                    print(f"Error qualifying contract {contract.symbol}: {e}")
-                    continue
-                    
                 # Create basic position info
                 pos_info = {
                     "symbol": contract.symbol,
@@ -105,38 +98,28 @@ class IBConnection:
                     "avgCost": self._safe_float(position.avgCost)
                 }
                 
-                # Try to get market data
+                # Try to get market data without using ticker
                 try:
-                    # Request market data with a qualified contract
-                    ticker = self.ib.reqMktData(contract)
-                    await asyncio.sleep(0.1)  # Brief delay for data to arrive
-                    
-                    # Add market-related data
+                    # Add market-related data using position values directly
                     pos_info.update({
-                        "marketPrice": self._safe_float(ticker.last if ticker.last else ticker.close),
-                        "marketValue": self._safe_float(pos_info["position"] * pos_info["marketPrice"]),
-                        "unrealizedPNL": self._safe_float((pos_info["marketPrice"] - pos_info["avgCost"]) * pos_info["position"]),
-                        "realizedPNL": 0.0  # Initialize to 0 since we can't get this directly
+                        "marketPrice": self._safe_float(position.marketPrice),
+                        "marketValue": self._safe_float(position.marketValue),
+                        "unrealizedPNL": self._safe_float(position.unrealizedPNL),
+                        "realizedPNL": self._safe_float(position.realizedPNL)
                     })
                     
                 except Exception as e:
                     print(f"Error getting market data for {contract.symbol}: {e}")
                     # Add default values
                     pos_info.update({
-                        "marketPrice": 0.0,
-                        "marketValue": 0.0,
+                        "marketPrice": pos_info["avgCost"],  # Use avgCost as fallback
+                        "marketValue": pos_info["avgCost"] * pos_info["position"],
                         "unrealizedPNL": 0.0,
                         "realizedPNL": 0.0
                     })
                 
                 formatted_positions.append(pos_info)
                 
-                # Cancel market data subscription to avoid memory leaks
-                try:
-                    self.ib.cancelMktData(contract)
-                except:
-                    pass
-            
             return formatted_positions
             
         except Exception as e:
