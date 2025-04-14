@@ -3,7 +3,7 @@ from datetime import datetime
 
 class TradeLogger:
     def __init__(self):
-        self.logs = []
+        self.logs = []  # Make sure this is initialized as an empty list
 
     def log_trade(
         self,
@@ -56,3 +56,6 @@ class TradeLogger:
         self.logs.append(log_entry)
         print(f"📝 Logged trade entry: {log_entry}")
         return log_entry
+
+    def get_logs(self):
+        return self.logs  # Make sure this method exists and returns self.logs

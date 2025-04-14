@@ -305,6 +305,84 @@ function createNumberInput(value) {
     `;
 }
 
+async function updateOpenOrders() {
+  try {
+    const response = await fetch("/open_orders");
+    if (!response.ok) throw new Error("Failed to fetch open orders");
+    const data = await response.json();
+
+    const tbody = document.querySelector("#openOrdersTable tbody");
+    tbody.innerHTML = "";
+
+    data.orders.forEach((order) => {
+      const row = tbody.insertRow();
+      row.innerHTML = `
+            <td>${order.orderId}${
+        order.parentId ? ` (${order.parentId})` : ""
+      }</td>
+            <td>${order.symbol}</td>
+            <td>${order.orderType}</td>
+            <td>${order.action}</td>
+            <td>${order.totalQuantity}</td>
+            <td>${formatPrice(
+              order.lmtPrice,
+              order.orderType,
+              order.auxPrice
+            )}</td>
+            <td class="status-${order.status.toLowerCase()}">${
+        order.status
+      }</td>
+            <td>${order.filled}/${order.remaining}</td>
+        `;
+    });
+
+    // Update order count in stats
+    document.getElementById("openOrdersCount").textContent = data.orders.length;
+  } catch (error) {
+    console.error("Error updating open orders:", error);
+  }
+}
+
+async function updateOpenPositions() {
+  try {
+    const response = await fetch("/open_positions");
+    if (!response.ok) throw new Error("Failed to fetch open positions");
+    const data = await response.json();
+
+    const tbody = document.querySelector("#openPositionsTable tbody");
+    tbody.innerHTML = "";
+
+    data.positions.forEach((position) => {
+      const row = tbody.insertRow();
+      const pnl = position.unrealizedPNL;
+      const pnlClass = pnl >= 0 ? "profit" : "loss";
+
+      row.innerHTML = `
+          <td>${position.symbol}</td>
+          <td>${position.position}</td>
+          <td>${position.avgCost.toFixed(2)}</td>
+          <td>${position.marketPrice.toFixed(2)}</td>
+          <td class="${pnlClass}">$${pnl.toFixed(2)}</td>
+          <td>$${position.marketValue.toFixed(2)}</td>
+          <td>$${position.realizedPNL.toFixed(2)}</td>
+      `;
+    });
+
+    // Update position count in stats
+    document.getElementById("openPositionsCount").textContent =
+      data.positions.length;
+  } catch (error) {
+    console.error("Error updating open positions:", error);
+  }
+}
+
+function formatPrice(lmtPrice, orderType, auxPrice) {
+  if (orderType === "LMT") return lmtPrice.toFixed(2);
+  if (orderType === "STP") return auxPrice.toFixed(2);
+  if (orderType === "TRAIL") return `Trail: ${auxPrice.toFixed(2)}`;
+  return "-";
+}
+
 async function saveConfig(element) {
   const configItem = element.closest(".config-item");
   const path = configItem.dataset.path;
@@ -354,10 +432,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initial loads
   updateConnectionStatus();
   updateDashboard();
+  updateOpenOrders(); // Initial load
+  updateOpenPositions(); // Initial load
 
   // Set up different refresh intervals
   setInterval(updateConnectionStatus, 5000); // Connection status every 3 seconds
   setInterval(updateDashboard, 30000); // Full dashboard update every 30 seconds
+  setInterval(updateOpenOrders, 5000); // Refresh every 5 seconds
+  setInterval(updateOpenPositions, 5000); // Refresh every 5 seconds
 });
 
 document.getElementById("downloadLogs").addEventListener("click", async () => {

@@ -405,6 +405,60 @@ input:checked + .toggle-slider:before {
   border-radius: 3px;
 }
 
+/* Add these styles to your existing CSS */
+.table-container {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+#openOrdersTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+#openOrdersTable th,
+#openOrdersTable td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+#openOrdersTable th {
+  background-color: var(--card-bg);
+  font-weight: 500;
+}
+
+#openOrdersTable tr:hover {
+  background-color: var(--hover-color);
+}
+
+/* Order status colors */
+.status-submitted {
+  color: var(--primary-color);
+}
+.status-filled {
+  color: var(--success-color);
+}
+.status-cancelled {
+  color: var(--danger-color);
+}
+.status-pending {
+  color: var(--warning-color);
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  #openOrdersTable {
+    font-size: 0.8rem;
+  }
+
+  #openOrdersTable th,
+  #openOrdersTable td {
+    padding: 0.5rem;
+  }
+}
+
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-areas:

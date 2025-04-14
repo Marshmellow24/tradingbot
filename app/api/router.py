@@ -36,6 +36,22 @@ async def update_config(updates: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/open_orders")
+async def get_open_orders():
+    """Get all open orders from IBKR"""
+    if not ib_connection:
+        raise HTTPException(status_code=503, detail="Service not initialized")
+    orders = await ib_connection.get_open_orders()
+    return {"orders": orders}
+
+@router.get("/open_positions")
+async def get_open_positions():
+    """Get all open positions from IBKR"""
+    if not ib_connection:
+        raise HTTPException(status_code=503, detail="Service not initialized")
+    positions = await ib_connection.get_open_positions()
+    return {"positions": positions}
+
 @router.get("/")
 @router.get("/dashboard")
 async def dashboard(request: Request):

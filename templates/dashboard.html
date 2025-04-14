@@ -52,10 +52,22 @@
               <span class="stat-label">Total Profit</span>
               <span class="stat-value" id="totalProfit">$0</span>
             </div>
+            <div class="stat-item">
+              <span class="stat-label">Open Orders</span>
+              <span class="stat-value" id="openOrdersCount">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Trades</span>
+              <span class="stat-value" id="tradesCount">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Open Positions</span>
+              <span class="stat-value" id="openPositionsCount">0</span>
+            </div>
           </div>
 
           <div class="recent-trades">
-            <h3>Recent Trades</h3>
+            <h3>Closed Trades</h3>
             <div class="trades-wrapper">
               <table class="trades-table">
                 <thead>
@@ -71,6 +83,47 @@
                   </tr>
                 </thead>
                 <tbody id="tradeTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" id="openOrdersCard">
+            <h2>Open Orders</h2>
+            <div class="table-container">
+              <table id="openOrdersTable">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Symbol</th>
+                    <th>Type</th>
+                    <th>Action</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Filled/Remaining</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" id="openPositionsCard">
+            <h2>Open Positions</h2>
+            <div class="table-container">
+              <table id="openPositionsTable">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Size</th>
+                    <th>Avg Entry</th>
+                    <th>Market Price</th>
+                    <th>Unrealized P/L</th>
+                    <th>Market Value</th>
+                    <th>Realized P/L</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
               </table>
             </div>
           </div>
