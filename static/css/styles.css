@@ -356,53 +356,70 @@ input:checked + .toggle-slider:before {
 }
 
 .trades-wrapper {
-  max-height: 250px;
+  max-height: 400px; /* Increase height to show more trades */
   overflow-y: auto;
   border-radius: var(--border-radius);
   background: var(--bg-color);
   padding: 0.5rem;
+  margin-top: 1rem;
+}
+
+.trades-scroll-container {
+  width: 100%;
+  overflow-x: auto;
 }
 
 .trades-table {
   width: 100%;
-  font-size: 0.813rem;
-  border-collapse: collapse;
+  font-size: 0.875rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.trades-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-color);
 }
 
 .trades-table th {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--text-secondary);
+  padding: 1rem;
   text-align: left;
-  padding: 0.5rem;
-  position: sticky;
-  top: 0;
-  background: var(--bg-color);
-  z-index: 1;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border-color);
+  white-space: nowrap;
 }
 
 .trades-table td {
-  padding: 0.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
 }
 
-.trades-table tr:last-child td {
-  border-bottom: none;
+.trades-table tbody tr:hover {
+  background: var(--card-bg);
 }
 
-/* Style scrollbar for WebKit browsers */
+/* Scrollbar styling */
 .trades-wrapper::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 .trades-wrapper::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
+  background: var(--bg-color);
+  border-radius: 4px;
 }
 
 .trades-wrapper::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.trades-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
 }
 
 /* Add these styles to your existing CSS */

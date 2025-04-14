@@ -149,23 +149,18 @@ function updateStats(trades) {
 }
 
 function updateTradeTable(trades) {
-  const tbody = document.getElementById("tradeTable");
+  const tbody = document.getElementById("tradeTable").querySelector("tbody");
   tbody.innerHTML = "";
 
-  trades
-    .slice(-8)
-    .reverse()
-    .forEach((trade) => {
-      // Add debug logging
-      console.log("Trade data:", trade);
+  // Show all trades instead of limiting to 8
+  trades.reverse().forEach((trade) => {
+    const row = tbody.insertRow();
+    const time = new Date(trade.timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-      const row = tbody.insertRow();
-      const time = new Date(trade.timestamp).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
-      row.innerHTML = `
+    row.innerHTML = `
             <td>${time}</td>
             <td>${trade.symbol}</td>
             <td>${trade.parentFillPrice.toFixed(
@@ -179,7 +174,7 @@ function updateTradeTable(trades) {
                 ${trade.profit >= 0 ? "+" : ""}$${trade.profit.toFixed(2)}
             </td>
         `;
-    });
+  });
 }
 
 function updateProfitChart(trades) {

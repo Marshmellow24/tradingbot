@@ -69,21 +69,23 @@
           <div class="recent-trades">
             <h3>Closed Trades</h3>
             <div class="trades-wrapper">
-              <table class="trades-table">
-                <thead>
-                  <tr>
-                    <th>Time</th>
-                    <th>Symbol</th>
-                    <th>Entry/Exit</th>
-                    <th>Timeframe</th>
-                    <th>Hit Type</th>
-                    <th>Direction</th>
-                    <th>Contract Size</th>
-                    <th>P/L</th>
-                  </tr>
-                </thead>
-                <tbody id="tradeTable"></tbody>
-              </table>
+              <div class="trades-scroll-container">
+                <table class="trades-table" id="tradeTable">
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Symbol</th>
+                      <th>Entry/Exit</th>
+                      <th>Timeframe</th>
+                      <th>Hit Type</th>
+                      <th>Direction</th>
+                      <th>Contract Size</th>
+                      <th>P/L</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
             </div>
           </div>
 
