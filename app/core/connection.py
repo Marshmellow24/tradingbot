@@ -86,18 +86,44 @@ class IBConnection:
             formatted_positions = []
             
             for position in positions:
-                formatted_positions.append({
+                # Create basic position info without market price first
+                pos_info = {
                     "symbol": position.contract.symbol,
                     "secType": position.contract.secType,
                     "exchange": position.contract.exchange,
                     "currency": position.contract.currency,
                     "position": position.position,  # Number of contracts
-                    "avgCost": position.avgCost,    # Average entry price
-                    "marketPrice": position.marketPrice,
-                    "marketValue": position.marketValue,
-                    "unrealizedPNL": position.unrealizedPNL,
-                    "realizedPNL": position.realizedPNL
-                })
+                    "avgCost": float(position.avgCost) if hasattr(position, 'avgCost') else 0.0
+                }
+                
+                # Try to get market data for the position
+                try:
+                    ticker = self.ib.reqMktData(position.contract)
+                    await asyncio.sleep(1)  # Wait for market data to arrive
+                    
+                    # Add market-related data if available
+                    pos_info.update({
+                        "marketPrice": float(ticker.marketPrice()) if ticker.marketPrice() else 0.0,
+                        "marketValue": float(ticker.marketValue()) if hasattr(ticker, 'marketValue') else 0.0,
+                        "unrealizedPNL": float(ticker.unrealizedPNL) if hasattr(ticker, 'unrealizedPNL') else 0.0,
+                        "realizedPNL": float(ticker.realizedPNL) if hasattr(ticker, 'realizedPNL') else 0.0
+                    })
+                    
+                    # Calculate PNL if market price is available
+                    if pos_info["marketPrice"] > 0:
+                        pos_info["unrealizedPNL"] = (pos_info["marketPrice"] - pos_info["avgCost"]) * pos_info["position"]
+                    
+                except Exception as e:
+                    print(f"Error getting market data for {position.contract.symbol}: {e}")
+                    # Add default values if market data request fails
+                    pos_info.update({
+                        "marketPrice": 0.0,
+                        "marketValue": 0.0,
+                        "unrealizedPNL": 0.0,
+                        "realizedPNL": 0.0
+                    })
+                
+                formatted_positions.append(pos_info)
             
             return formatted_positions
             

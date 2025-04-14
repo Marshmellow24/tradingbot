@@ -432,9 +432,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Set up different refresh intervals
   setInterval(updateConnectionStatus, 5000); // Connection status every 3 seconds
-  setInterval(updateDashboard, 30000); // Full dashboard update every 30 seconds
-  setInterval(updateOpenOrders, 500); // Refresh every 0.5 seconds
-  setInterval(updateOpenPositions, 500); // Refresh every 0.5 seconds
+  setInterval(updateDashboard, 15000); // Full dashboard update every 15 seconds
+  setInterval(updateOpenOrders, 1000); // Refresh every 1 seconds
+  setInterval(updateOpenPositions, 1000); // Refresh every 1 seconds
 });
 
 document.getElementById("downloadLogs").addEventListener("click", async () => {

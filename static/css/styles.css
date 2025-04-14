@@ -40,7 +40,7 @@ body {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1600px; /* Increased from 1200px */
   margin: 0 auto;
   padding: 2rem;
 }
@@ -82,9 +82,9 @@ h1 {
 .dashboard-grid {
   display: grid;
   grid-template-areas:
-    "stats stats config"
-    "chart chart chart";
-  grid-template-columns: repeat(3, 1fr);
+    "stats stats stats config"
+    "chart chart chart chart";
+  grid-template-columns: repeat(4, 1fr); /* Changed from 3 to 4 columns */
   grid-template-rows: auto minmax(300px, 40vh);
   gap: 1.5rem;
   max-height: calc(100vh - 100px);
@@ -356,7 +356,8 @@ input:checked + .toggle-slider:before {
 }
 
 .trades-wrapper {
-  max-height: 400px; /* Increase height to show more trades */
+  max-height: 500px; /* Increased from 400px */
+  width: 100%;
   overflow-y: auto;
   border-radius: var(--border-radius);
   background: var(--bg-color);
@@ -366,14 +367,11 @@ input:checked + .toggle-slider:before {
 
 .trades-scroll-container {
   width: 100%;
-  overflow-x: auto;
 }
 
 .trades-table {
   width: 100%;
-  font-size: 0.875rem;
-  border-collapse: separate;
-  border-spacing: 0;
+  table-layout: fixed; /* Add fixed layout */
 }
 
 .trades-table thead {
@@ -397,6 +395,32 @@ input:checked + .toggle-slider:before {
   border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
 }
+
+/* Define specific column widths */
+.trades-table th:nth-child(1) {
+  width: 8%;
+} /* Time */
+.trades-table th:nth-child(2) {
+  width: 8%;
+} /* Symbol */
+.trades-table th:nth-child(3) {
+  width: 15%;
+} /* Entry/Exit */
+.trades-table th:nth-child(4) {
+  width: 8%;
+} /* Timeframe */
+.trades-table th:nth-child(5) {
+  width: 12%;
+} /* Hit Type */
+.trades-table th:nth-child(6) {
+  width: 10%;
+} /* Direction */
+.trades-table th:nth-child(7) {
+  width: 12%;
+} /* Contract Size */
+.trades-table th:nth-child(8) {
+  width: 12%;
+} /* P/L */
 
 .trades-table tbody tr:hover {
   background: var(--card-bg);
@@ -465,14 +489,24 @@ input:checked + .toggle-slider:before {
 }
 
 /* Responsive design */
-@media (max-width: 1024px) {
-  #openOrdersTable {
-    font-size: 0.8rem;
+@media (max-width: 1600px) {
+  .container {
+    max-width: 1400px;
   }
+}
 
-  #openOrdersTable th,
-  #openOrdersTable td {
-    padding: 0.5rem;
+@media (max-width: 1400px) {
+  .container {
+    max-width: 1200px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-areas:
+      "stats stats config"
+      "chart chart chart";
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -483,7 +517,26 @@ input:checked + .toggle-slider:before {
       "config config"
       "chart chart";
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: auto auto minmax(250px, 35vh);
+  }
+
+  .trades-table {
+    font-size: 0.8rem;
+  }
+
+  .trades-table th,
+  .trades-table td {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  #openOrdersTable {
+    font-size: 0.8rem;
+  }
+
+  #openOrdersTable th,
+  #openOrdersTable td {
+    padding: 0.5rem;
   }
 }
 
